@@ -83,6 +83,26 @@ def fft_2d(array, w):
     
     return fft_array
 
+def calc_diffraction_eff(gint, rint, rp, w, h):
+    #パラメータ
+    hh = height/2
+    hw = width/2
+    mask_d = 3
+    g_total = np.sum(gint)
+    
+    pos = np.unravel_index(np.argmax(rint), rint.shape)
+    print("y position = %d" %pos[0])
+    print("x position = %d" %pos[1])
+    
+    # マスク配列の作成
+    mask = np.where(rp<= mask_d, 1, 0)
+    mask_shift = np.roll(mask, int(hh-pos[0]), axis=0)
+    mask_shift = np.roll(mask_shift, int(hw-pos[1]), axis=1)
+    r_total = np.sum(rint * mask_shift)
+    
+    # 回折効率の計算
+    return r_total/g_total
+
 if __name__ == '__main__':
     
     #1. 2次元のグレーティングを設計する
