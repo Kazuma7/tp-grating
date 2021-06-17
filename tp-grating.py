@@ -13,7 +13,7 @@ a = 1
 
 #sin波の配列を作る関数
 def sin_g(w, h):
-    n = 10
+    n = 100
     x = np.linspace(0, 2*np.pi*n, w)
     nor_vec = np.ones((h))
     x_outer = np.outer(nor_vec,x)
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     #4 ガウシアンビームを画像として表示して保存
     bmp_store(g_amp, "grating_amp.bmp")
     
-    g_wave = make_complex(g_phase, g_amp, width, height)
+    g_wave = make_complex(g_amp, binary_g, width, height)
     
     #5 グレーティング通過後の光の波を記述する
     after_fft = fft_2d(g_wave, width)
