@@ -7,7 +7,7 @@ import time
 #パラメータの設定
 width = 512
 height = 512
-w0 = 500
+w0 = 100
 power = 1
 a = 1
 
@@ -87,6 +87,7 @@ if __name__ == '__main__':
     
     #1. 2次元のグレーティングを設計する
     g_phase = sin_g(width,height)
+    print(g_phase)
     
     #2.2値表現に変更する
     binary_g = binary_g(g_phase,0,a*np.pi,a*np.pi)
@@ -101,6 +102,7 @@ if __name__ == '__main__':
     bmp_store(g_amp, "grating_amp.bmp")
     
     g_wave = make_complex(g_phase, g_amp, width, height)
+    
     #5 グレーティング通過後の光の波を記述する
     after_fft = fft_2d(g_wave, width)
     
