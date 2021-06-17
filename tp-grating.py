@@ -7,13 +7,16 @@ import time
 #パラメータの設定
 width = 512
 height = 512
+# -ガウシアンの半径
 w0 = 100
+# -全エネルギー
 power = 1
+# -2値の部分
 a = 1
 
 #sin波の配列を作る関数
 def sin_g(w, h):
-    n = 100
+    n = 10
     x = np.linspace(0, 2*np.pi*n, w)
     nor_vec = np.ones((h))
     x_outer = np.outer(nor_vec,x)
@@ -67,8 +70,9 @@ def gauss_beam(w, h, w0, power):
     g_intensity = peak_intensity * np.exp((-2*r2)/w02)
     array = np.sqrt(g_intensity)
     
-    return array
+    return array,r
     
+#g_ampとg_phaseによってできる複素表現
 def make_complex(amp, phase, w, h):
     u = np.zeros((w,h), dtype=np.complex128)
     u.real = amp * np.cos(phase)
@@ -76,6 +80,7 @@ def make_complex(amp, phase, w, h):
     
     return u
 
+#高速フーリエ変換を行う
 def fft_2d(array, w):
     array_shift = np.fft.fftshift(array)
     array_normalize = np.fft.fft2(array_shift)/w
@@ -83,14 +88,15 @@ def fft_2d(array, w):
     
     return fft_array
 
-def calc_diffraction_eff(gint, rint, rp, w, h):
+#回折効率を計算する部分
+def calc_diffraction_eff(g_int, r_int, rp, w, h):
     #パラメータ
-    hh = height/2
-    hw = width/2
+    hh = h/2
+    hw = w/2
     mask_d = 3
-    g_total = np.sum(gint)
+    g_total = np.sum(g_int)
     
-    pos = np.unravel_index(np.argmax(rint), rint.shape)
+    pos = np.unravel_index(np.argmax(r_int), r_int.shape)
     print("y position = %d" %pos[0])
     print("x position = %d" %pos[1])
     
@@ -98,32 +104,28 @@ def calc_diffraction_eff(gint, rint, rp, w, h):
     mask = np.where(rp<= mask_d, 1, 0)
     mask_shift = np.roll(mask, int(hh-pos[0]), axis=0)
     mask_shift = np.roll(mask_shift, int(hw-pos[1]), axis=1)
-    r_total = np.sum(rint * mask_shift)
+    r_total = np.sum(r_int * mask_shift)
     
     # 回折効率の計算
     return r_total/g_total
 
 if __name__ == '__main__':
     
-    #1. 2次元のグレーティングを設計する
+    #1 2次元のsin波の２値グレーティングを設計する
     g_phase = sin_g(width,height)
-    print(g_phase)
-    
-    #2.2値表現に変更する
     binary_g = binary_g(g_phase,0,a*np.pi,a*np.pi)
     
-    #2. 設計したグレーティングを画像として表示して保存
+    #2 設計したグレーティングを画像として表示して保存
     bmp_store(binary_g, "grating_phase.bmp")
     
-    #3. グレーティングに照射するレーザービーム面を設計
-    g_amp = gauss_beam(width, height, w0, power)
+    #3 グレーティングに照射するレーザービーム面を設計
+    g_amp, r = gauss_beam(width, height, w0, power)
     
     #4 ガウシアンビームを画像として表示して保存
     bmp_store(g_amp, "grating_amp.bmp")
     
-    g_wave = make_complex(g_amp, binary_g, width, height)
-    
     #5 グレーティング通過後の光の波を記述する
+    g_wave = make_complex(g_amp, binary_g, width, height)
     after_fft = fft_2d(g_wave, width)
     
     #6 強度分布を求める
@@ -133,3 +135,5 @@ if __name__ == '__main__':
     bmp_store(rec_int, "rec_int.bmp")
     
     #8 回折効率を求める
+    g_amp_int = np.abs(g_amp)**2
+    print(calc_diffraction_eff(g_amp_int,rec_int,r, width, height))
